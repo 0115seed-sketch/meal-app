@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 학교 급식</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>우리 학교 급식</h1>
+            <div class="school-search">
+                <input type="text" id="school-search-input" placeholder="학교 이름을 검색하세요">
+                <button id="search-btn">검색</button>
+                <div id="school-search-results"></div>
+            </div>
+            <div class="my-school">
+                <span id="my-school-name">내 학교: 설정되지 않음</span>
+                <button id="set-my-school-btn">내 학교로 설정</button>
+                <button id="view-my-school-btn">내 학교 보기</button>
+            </div>
+        </header>
+        <main>
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month-btn">&lt;</button>
+                    <h2 id="current-month-year"></h2>
+                    <button id="next-month-btn">&gt;</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </div>
+            <div class="meal-info-container" style="display: none;"> 
+                <!-- 이 부분은 모달로 대체되므로 숨깁니다. -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 상세 정보 모달 -->
+    <div id="meal-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modal-date"></h3>
+            <div id="modal-meal-details"></div>
+            <div id="modal-nutrition-info">
+                <h4>영양 정보</h4>
+                <canvas id="nutrition-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
