@@ -27,7 +27,7 @@ header {
     gap: 20px;
 }
 
-/* header-left, header-right 그룹 스타일 (추가) */
+/* header-left, header-right 그룹 스타일 */
 .header-left, .header-right {
     display: flex;
     align-items: center;
@@ -42,7 +42,7 @@ header h1 {
 }
 
 .school-search {
-    position: relative; /* 자식 요소의 기준점이 되도록 설정 */
+    position: relative;
     display: flex;
     width: 100%;
     max-width: 400px;
@@ -64,20 +64,19 @@ header h1 {
     border-radius: 0 4px 4px 0;
 }
 
-/* 뷰를 숨기기 위한 클래스 (추가) */
 .hidden {
     display: none !important;
 }
 
 #school-search-results {
     position: absolute;
-    top: 100%; /* 검색창 바로 아래에 위치 */
+    top: 100%;
     left: 0;
     right: 0;
     background-color: white;
     border: 1px solid #ddd;
     border-top: none;
-    z-index: 1000; /* 다른 요소들 위에 보이도록 설정 */
+    z-index: 1000;
     max-height: 200px;
     overflow-y: auto;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -137,12 +136,12 @@ main {
 }
 
 #today-meals {
-    flex: 1; /* 남는 공간을 차지하도록 */
+    flex: 1;
 }
 
 #today-chart-container {
     flex: 1;
-    max-width: 400px; /* 그래프 최대 너비 제한 */
+    max-width: 400px;
 }
 
 .allergy-info-box {
@@ -210,7 +209,7 @@ main {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 5열로 유지 */
+    grid-template-columns: repeat(5, 1fr);
     gap: 5px;
 }
 
@@ -338,6 +337,7 @@ main {
     header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 15px;
     }
     main {
         flex-direction: column;
@@ -347,5 +347,26 @@ main {
     }
     #today-chart-container {
         max-width: 100%;
+    }
+    /* 요일 헤더는 모바일에서 숨김 */
+    .day-name {
+        display: none;
+    }
+    /* 달력을 세로 목록 형태로 변경 */
+    .calendar-grid {
+        grid-template-columns: 1fr; /* 1열로 변경 */
+        gap: 10px;
+    }
+    .date {
+        min-height: auto; /* 높이 제한 해제 */
+        border: 1px solid #eee;
+        padding: 10px;
+    }
+    /* 비어있는 날짜는 숨김 */
+    .date:empty {
+        display: none;
+    }
+    .date-number {
+        font-size: 1.1em;
     }
 }

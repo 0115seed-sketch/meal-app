@@ -87,8 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = today.getDate();
 
         try {
-            const response = await fetch(`http://localhost:3000/api/getMeal?schoolCode=${currentSchool.SD_SCHUL_CODE}&officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&year=${year}&month=${String(month).padStart(2, '0')}`);
-            const meals = await response.json();
+            const meals = await fetchMeals(year, month);
             const todayMeals = meals.filter(m => m.MLSV_YMD === `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`);
 
             if (todayMeals.length === 0) {
@@ -104,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 mealCard.className = 'meal-card';
                 const menuItems = meal.DDISH_NM.replace(/<br\/>/g, '</li><li>');
                 
-                // 1. 급식이 하나일 경우 '중식' 표시 생략
                 const mealTitle = todayMeals.length > 1 ? `<h4>${meal.MMEAL_SC_NM}</h4>` : '';
                 mealCard.innerHTML = `${mealTitle}<ul><li>${menuItems}</li></ul>`;
                 todayMealsContainer.appendChild(mealCard);
@@ -118,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (protMatch) totalNutritions.prot += parseFloat(protMatch[1]);
                 if (fatMatch) totalNutritions.fat += parseFloat(fatMatch[1]);
 
-                // 2. 알레르기 정보 수집
                 const allergyNumbers = meal.DDISH_NM.match(/\((\d+\.?)+\)/g);
                 if (allergyNumbers) {
                     allergyNumbers.forEach(group => {
@@ -180,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 주간 보기 렌더링 (수정) ---
     const renderWeeklyView = async () => {
-        listViewContainer.innerHTML = ''; // 제목 삭제
+        listViewContainer.innerHTML = '';
         if (!currentSchool) {
             listViewContainer.innerHTML += '<p>학교를 먼저 선택해주세요.</p>';
             return;
@@ -191,10 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = today.getMonth() + 1;
         const dayOfWeek = today.getDay();
         const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-        const monday = new Date(new Date().setDate(diff)); // 원본 today를 변경하지 않도록 수정
+        const monday = new Date(new Date().setDate(diff));
 
         try {
-            // 이번 달과 다음 달 데이터를 모두 가져올 수 있도록 수정 (주가 월말에 걸치는 경우 대비)
             const currentMonthMeals = await fetchMeals(year, month);
             const nextMonthDate = new Date(monday);
             nextMonthDate.setDate(monday.getDate() + 4);
@@ -212,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dayCard = document.createElement('div');
                 dayCard.className = 'meal-card';
                 
-                // 3. 오늘 날짜에 테두리 표시
                 if (currentDay.toDateString() === new Date().toDateString()) {
                     dayCard.classList.add('today');
                 }
@@ -220,13 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 dayCard.innerHTML = `<h4>${currentDay.getMonth() + 1}월 ${currentDay.getDate()}일 (${'월화수목금'[i]})</h4>`;
 
                 if (dayMeals.length > 0) {
-                    // 4. 모달을 위한 데이터 저장
                     dayCard.dataset.date = ymd;
                     dayCard.dataset.meal = dayMeals.map(m => JSON.stringify(m)).join('||') + '||';
                     dayCard.style.cursor = 'pointer';
 
                     dayMeals.forEach(meal => {
-                        // 4. 알레르기 번호 제거 및 1. '중식' 표시 조건부 렌더링
                         const pureMenu = meal.DDISH_NM.replace(/\([^)]*\)/g, '').replace(/<br\/>/g, '</li><li>');
                         const mealTitle = dayMeals.length > 1 ? `<h5>${meal.MMEAL_SC_NM}</h5>` : '';
                         dayCard.innerHTML += `${mealTitle}<ul><li>${pureMenu}</li></ul>`;
@@ -246,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchMeals = async (year, month) => {
         if (!currentSchool) return [];
         try {
-            // 'http://localhost:3000' 삭제
             const response = await fetch(`/api/getMeal?schoolCode=${currentSchool.SD_SCHUL_CODE}&officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&year=${year}&month=${String(month).padStart(2, '0')}`);
             return await response.json();
         } catch (error) {
@@ -290,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         searchDebounce = setTimeout(async () => {
             try {
-                // 'http://localhost:3000' 삭제
                 const response = await fetch(`/api/searchSchool?schoolName=${schoolName}`);
                 const schools = await response.json();
                 renderSchoolSearchResults(schools);

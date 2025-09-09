@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리 학교 급식</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -14,12 +15,11 @@
                 <h1>우리 학교 급식</h1>
                 <div class="school-search">
                     <input type="text" id="school-search-input" placeholder="학교 이름을 검색하세요">
-                    <button id="search-btn">검색</button> <!-- 이 버튼을 다시 추가합니다. -->
+                    <button id="search-btn">검색</button>
                     <div id="school-search-results"></div>
                 </div>
                 <div class="my-school">
                     <span id="my-school-name">내 학교: 설정되지 않음</span>
-                    <!-- '내 학교' 버튼에 view-btn 클래스 추가 -->
                     <button id="set-my-school-btn" class="view-btn">내 학교로 설정</button>
                     <button id="view-my-school-btn" class="view-btn">내 학교 보기</button>
                 </div>
@@ -48,9 +48,6 @@
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
             </div>
-            <div class="meal-info-container" style="display: none;"> 
-                <!-- 이 부분은 모달로 대체되므로 숨깁니다. -->
-            </div>
         </main>
     </div>
 
@@ -67,7 +64,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
