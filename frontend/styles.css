@@ -16,13 +16,11 @@ body {
 }
 
 header {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column; /* 자식 요소들을 세로로 정렬 */
+    align-items: center;   /* 가운데 정렬 */
+    margin-bottom: 20px;
+    gap: 15px; /* 요소들 사이의 간격 */
 }
 
 header h1 {
@@ -82,7 +80,7 @@ header h1 {
 
 /* 보기 모드 버튼 스타일 */
 .view-controls {
-    margin-bottom: 15px;
+    /* margin-bottom: 15px; 는 이제 필요 없으므로 삭제하거나 주석 처리합니다. */
     display: flex;
     gap: 5px;
 }
@@ -106,14 +104,49 @@ header h1 {
     border-color: #007bff;
 }
 
+/* 뷰를 숨기기 위한 클래스 */
+.hidden {
+    display: none !important;
+}
+
+/* 오늘/주간 보기 컨테이너 스타일 */
+#list-view-container {
+    width: 100%;
+}
+
+.meal-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.meal-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.meal-card ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.meal-card li {
+    padding: 5px 0;
+}
+
+
 main {
     position: relative;
-    display: flex;
-    gap: 20px;
+    /* display: flex; 와 gap: 20px; 는 삭제합니다. */
 }
 
 .calendar-container {
-    flex: 3;
+    /* flex: 3; 은 삭제합니다. */
+    width: 100%;
 }
 
 .calendar-header {
