@@ -1,3 +1,4 @@
+/* --- 기본 스타일 --- */
 body {
     font-family: 'Noto Sans KR', sans-serif;
     margin: 0;
@@ -20,9 +21,18 @@ header {
     padding-bottom: 20px;
     margin-bottom: 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* 왼쪽과 오른쪽 그룹을 양 끝으로 분리 */
     align-items: center;
     flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* header-left, header-right 그룹 스타일 (추가) */
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap; /* 창이 좁아지면 이 안에서도 줄바꿈 허용 */
 }
 
 header h1 {
@@ -32,38 +42,49 @@ header h1 {
 }
 
 .school-search {
-    position: relative;
+    position: relative; /* 자식 요소의 기준점이 되도록 설정 */
+    display: flex;
+    width: 100%;
+    max-width: 400px;
 }
 
 #school-search-input {
+    flex: 1;
     padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 250px;
+    border-radius: 4px 0 0 4px;
 }
 
 #search-btn {
-    padding: 8px 12px;
+    padding: 0 15px;
     border: none;
     background-color: #007bff;
     color: white;
-    border-radius: 4px;
     cursor: pointer;
+    border-radius: 0 4px 4px 0;
+}
+
+/* 뷰를 숨기기 위한 클래스 (추가) */
+.hidden {
+    display: none !important;
 }
 
 #school-search-results {
     position: absolute;
+    top: 100%; /* 검색창 바로 아래에 위치 */
+    left: 0;
+    right: 0;
     background-color: white;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-top: none;
-    width: 100%;
+    z-index: 1000; /* 다른 요소들 위에 보이도록 설정 */
     max-height: 200px;
     overflow-y: auto;
-    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 #school-search-results div {
-    padding: 8px;
+    padding: 10px;
     cursor: pointer;
 }
 
@@ -74,11 +95,33 @@ header h1 {
 .my-school {
     display: flex;
     align-items: center;
+    gap: 10px;
 }
 
 #my-school-name {
-    margin-right: 10px;
     font-weight: bold;
+    white-space: nowrap; /* '내 학교' 이름이 줄바꿈되지 않도록 */
+}
+
+.view-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.view-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    cursor: pointer;
+    border-radius: 4px;
+    white-space: nowrap; /* 버튼 안의 글자가 줄바꿈되지 않도록 */
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.view-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
 main {
@@ -86,8 +129,71 @@ main {
     gap: 20px;
 }
 
+/* --- 오늘/주간 보기 --- */
+#list-view-container {
+    width: 100%;
+    display: flex;
+    gap: 20px;
+}
+
+#today-meals {
+    flex: 1; /* 남는 공간을 차지하도록 */
+}
+
+#today-chart-container {
+    flex: 1;
+    max-width: 400px; /* 그래프 최대 너비 제한 */
+}
+
+.allergy-info-box {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+.allergy-info-box h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.allergy-info-box p {
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.meal-card {
+    background-color: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: background-color 0.2s;
+}
+
+.meal-card.today {
+    border: 2px solid #3498db;
+}
+
+.meal-card[data-meal]:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+
+.meal-card h4, .meal-card h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.meal-card ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 월간 보기 --- */
 .calendar-container {
-    flex: 3;
+    width: 100%;
 }
 
 .calendar-header {
@@ -97,113 +203,65 @@ main {
     margin-bottom: 10px;
 }
 
+#current-month-year {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(5, 1fr); /* 5열로 유지 */
     gap: 5px;
+}
+
+.calendar-grid > div {
+    border: 1px solid #eee;
+    min-height: 120px;
+    border-radius: 4px;
 }
 
 .day-name {
     font-weight: bold;
     text-align: center;
-    padding: 5px 0; /* 위아래 여백을 줄여 높이를 최소화합니다. */
+    padding: 10px 5px;
     background-color: #f5f5f5;
-}
-
-.calendar-grid div {
-    padding: 10px;
-    border: 1px solid #eee;
-    min-height: 80px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    min-height: auto !important;
 }
 
 .date {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    padding: 4px;
-    overflow-y: auto; /* 메뉴가 길 경우 스크롤 */
-    font-size: 0.8em;
-    gap: 2px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    padding: 8px;
+    font-size: 0.85em;
+    line-height: 1.5;
+}
+
+.date[data-meal]:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
 }
 
 .date-number {
     font-weight: bold;
-    font-size: 1.2em;
-    margin-bottom: 4px;
-    align-self: flex-start;
-}
-
-.date .today {
-    /* 기존 스타일 대신 테두리를 사용합니다. */
-    border: 2px solid #3498db;
-    border-radius: 50%; /* 원형 테두리 */
-    font-weight: bold;
-    background-color: transparent !important; /* 배경색은 투명하게 */
-    padding: 2px;
-    display: inline-block;
-    width: 24px; /* 원의 크기를 고정 */
-    height: 24px;
-    line-height: 20px; /* 텍스트를 중앙에 맞춤 */
-    text-align: center;
-}
-
-.date:hover {
-    background-color: #f0f0f0;
-}
-
-.calendar-grid .selected {
-    border-color: #007bff;
-    background-color: #cfe2ff;
-}
-
-.meal-info-container {
-    flex: 2;
-    padding: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-}
-
-#meal-details ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-#meal-details li {
+    font-size: 1.1em;
     margin-bottom: 5px;
+    display: block;
 }
 
-.allergy-info {
-    font-size: 0.8em;
-    color: #888;
-}
-
-/* 달력 날짜 셀 스타일 수정 */
-/*
-.meal-item {
+.date-number.today {
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    width: 100%;
+    justify-content: center;
 }
 
-.meal-color-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-*/
-
-/* 모달 스타일 */
+/* --- 모달 --- */
 .modal {
-    display: none; /* 기본적으로 숨김 */
+    display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 1001;
     left: 0;
     top: 0;
     width: 100%;
@@ -217,12 +275,13 @@ main {
 .modal-content {
     background-color: #fefefe;
     margin: auto;
-    padding: 20px;
+    padding: 25px;
     border: 1px solid #888;
     width: 90%;
     max-width: 500px;
     border-radius: 8px;
     position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .close-btn {
@@ -235,12 +294,58 @@ main {
     cursor: pointer;
 }
 
-.close-btn:hover,
-.close-btn:focus {
-    color: black;
-}
-
 #modal-meal-details ul {
     list-style-type: none;
     padding: 0;
+    line-height: 1.7;
+}
+
+#modal-meal-details h4 {
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* --- 반응형 스타일 --- */
+
+/* 1. 중간 크기 화면 (태블릿 등) */
+@media (max-width: 992px) {
+    .calendar-grid > div {
+        min-height: 40px;
+        padding: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* 급식 메뉴 텍스트 숨기기 */
+    .date > div {
+        display: none;
+    }
+
+    .date-number {
+        margin-bottom: 0;
+    }
+}
+
+/* 2. 작은 크기 화면 (모바일) */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+    }
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    main {
+        flex-direction: column;
+    }
+    #list-view-container {
+        flex-direction: column;
+    }
+    #today-chart-container {
+        max-width: 100%;
+    }
 }

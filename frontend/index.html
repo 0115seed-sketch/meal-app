@@ -9,20 +9,38 @@
 <body>
     <div class="container">
         <header>
-            <h1>우리 학교 급식</h1>
-            <div class="school-search">
-                <input type="text" id="school-search-input" placeholder="학교 이름을 검색하세요">
-                <button id="search-btn">검색</button>
-                <div id="school-search-results"></div>
+            <!-- 왼쪽 정렬될 요소들을 그룹화 -->
+            <div class="header-left">
+                <h1>우리 학교 급식</h1>
+                <div class="school-search">
+                    <input type="text" id="school-search-input" placeholder="학교 이름을 검색하세요">
+                    <button id="search-btn">검색</button> <!-- 이 버튼을 다시 추가합니다. -->
+                    <div id="school-search-results"></div>
+                </div>
+                <div class="my-school">
+                    <span id="my-school-name">내 학교: 설정되지 않음</span>
+                    <!-- '내 학교' 버튼에 view-btn 클래스 추가 -->
+                    <button id="set-my-school-btn" class="view-btn">내 학교로 설정</button>
+                    <button id="view-my-school-btn" class="view-btn">내 학교 보기</button>
+                </div>
             </div>
-            <div class="my-school">
-                <span id="my-school-name">내 학교: 설정되지 않음</span>
-                <button id="set-my-school-btn">내 학교로 설정</button>
-                <button id="view-my-school-btn">내 학교 보기</button>
+            <!-- 오른쪽 정렬될 요소들을 그룹화 -->
+            <div class="header-right">
+                <div class="view-controls">
+                    <button id="today-view-btn" class="view-btn active">오늘</button>
+                    <button id="weekly-view-btn" class="view-btn">주간</button>
+                    <button id="monthly-view-btn" class="view-btn">월간</button>
+                </div>
             </div>
         </header>
         <main>
-            <div class="calendar-container">
+            <!-- 오늘/주간 보기 컨테이너 -->
+            <div id="list-view-container">
+                <!-- 이 안에 오늘의 급식과 그래프가 동적으로 생성됩니다. -->
+            </div>
+
+            <!-- 월간 보기 컨테이너 (기존 달력) -->
+            <div class="calendar-container hidden">
                 <div class="calendar-header">
                     <button id="prev-month-btn">&lt;</button>
                     <h2 id="current-month-year"></h2>
