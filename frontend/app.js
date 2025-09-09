@@ -260,15 +260,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateNutritionChart(totalNutritions);
         modal.style.display = 'flex';
+
+        // 모달이 열릴 때 히스토리 상태 추가
+        history.pushState({ modalOpen: true }, null);
+    };
+
+    const closeModal = () => {
+        modal.style.display = 'none';
     };
 
     closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
+        // 모달을 닫을 때 히스토리에서 한 단계 뒤로 이동
+        history.back();
     });
 
     window.addEventListener('click', (e) => {
         if (e.target == modal) {
-            modal.style.display = 'none';
+            history.back();
+        }
+    });
+
+    // 브라우저 뒤로가기 버튼 감지
+    window.addEventListener('popstate', (event) => {
+        // popstate 이벤트는 history.back() 호출 시에도 발생하므로,
+        // 모달이 열려있는 상태에서만 닫기 함수를 호출하여 무한 루프 방지
+        if (modal.style.display === 'flex') {
+            closeModal();
         }
     });
 
