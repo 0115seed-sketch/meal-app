@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 변수 선언 (모달 관련 추가) ---
+    // --- 변수 선언 (보기 모드 관련 추가) ---
     const schoolSearchInput = document.getElementById('school-search-input');
     const searchBtn = document.getElementById('search-btn');
     const schoolSearchResults = document.getElementById('school-search-results');
@@ -10,8 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextMonthBtn = document.getElementById('next-month-btn');
     const currentMonthYear = document.getElementById('current-month-year');
     const calendarGrid = document.getElementById('calendar-grid');
-    const mealDetails = document.getElementById('meal-details'); // 이 변수는 이제 모달 내부에서 사용됩니다.
-    const nutritionChartCanvas = document.getElementById('nutrition-chart');
+    
+    // 보기 모드 버튼 및 컨테이너
+    const todayViewBtn = document.getElementById('today-view-btn');
+    const weeklyViewBtn = document.getElementById('weekly-view-btn');
+    const monthlyViewBtn = document.getElementById('monthly-view-btn');
+    const listViewContainer = document.getElementById('list-view-container');
+    const calendarContainer = document.querySelector('.calendar-container');
 
     // 모달 요소
     const modal = document.getElementById('meal-modal');
@@ -21,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentSchool = null;
     let currentDate = new Date();
+    let currentView = 'today'; // 현재 보기 모드 상태
     let nutritionChart = null;
     let searchDebounce;
 
@@ -40,14 +46,82 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일`;
     };
 
-    // --- 내 학교 설정 (변경 없음) ---
+    // --- 보기 모드 변경 ---
+    const updateView = (view) => {
+        currentView = view;
+        // 버튼 활성화 상태 업데이트
+        todayViewBtn.classList.toggle('active', view === 'today');
+        weeklyViewBtn.classList.toggle('active', view === 'weekly');
+        monthlyViewBtn.classList.toggle('active', view === 'monthly');
+
+        // 컨테이너 보이기/숨기기
+        listViewContainer.classList.toggle('hidden', view === 'monthly');
+        calendarContainer.classList.toggle('hidden', view !== 'monthly');
+
+        // 뷰에 맞는 데이터 렌더링
+        if (view === 'today') {
+            renderTodayView();
+        } else if (view === 'weekly') {
+            // 주간 보기 (추후 구현)
+            listViewContainer.innerHTML = '<h3>주간 보기는 준비 중입니다.</h3>';
+        } else if (view === 'monthly') {
+            renderCalendar();
+        }
+    };
+
+    todayViewBtn.addEventListener('click', () => updateView('today'));
+    weeklyViewBtn.addEventListener('click', () => updateView('weekly'));
+    monthlyViewBtn.addEventListener('click', () => updateView('monthly'));
+
+    // --- 오늘의 급식 렌더링 ---
+    const renderTodayView = async () => {
+        listViewContainer.innerHTML = '<h3>오늘의 급식</h3>';
+        if (!currentSchool) {
+            listViewContainer.innerHTML += '<p>학교를 먼저 선택해주세요.</p>';
+            return;
+        }
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+
+        try {
+            const response = await fetch(`/api/getMeal?schoolCode=${currentSchool.SD_SCHUL_CODE}&officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&year=${year}&month=${String(month).padStart(2, '0')}`);
+            const meals = await response.json();
+            const todayMeals = meals.filter(m => m.MLSV_YMD === `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`);
+
+            if (todayMeals.length === 0) {
+                listViewContainer.innerHTML += '<p>오늘 급식 정보가 없습니다.</p>';
+                return;
+            }
+
+            todayMeals.forEach(meal => {
+                const mealCard = document.createElement('div');
+                mealCard.className = 'meal-card';
+                const menuItems = meal.DDISH_NM.replace(/<br\/>/g, '</li><li>');
+                mealCard.innerHTML = `
+                    <h4>${meal.MMEAL_SC_NM}</h4>
+                    <ul><li>${menuItems}</li></ul>
+                    <p class="allergy-info">${meal.NTR_INFO || ''}</p>
+                    <p class="allergy-info">${meal.CAL_INFO || ''}</p>
+                `;
+                listViewContainer.appendChild(mealCard);
+            });
+        } catch (error) {
+            console.error('오늘 급식 정보 오류:', error);
+            listViewContainer.innerHTML += '<p>급식 정보를 불러오는 중 오류가 발생했습니다.</p>';
+        }
+    };
+
+    // --- 내 학교 설정 (수정) ---
     const loadMySchool = () => {
         const savedSchool = localStorage.getItem('mySchool');
         if (savedSchool) {
             currentSchool = JSON.parse(savedSchool);
             mySchoolName.textContent = `내 학교: ${currentSchool.SCHUL_NM}`;
-            schoolSearchInput.value = currentSchool.SCHUL_NM;
-            renderCalendar();
+            // 초기 뷰 렌더링
+            updateView(currentView); 
         }
     };
 
