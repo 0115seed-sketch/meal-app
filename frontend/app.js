@@ -134,9 +134,26 @@ document.addEventListener('DOMContentLoaded', () => {
             todayMealsContainer.innerHTML += '<p>급식 정보를 불러오는 중 오류가 발생했습니다.</p>';
         }
     };
+    
+    // --- 오늘의 알레르기 정보 표시 ---
+    const renderTodayAllergyInfo = (allergies) => {
+        const allergyInfoBox = document.getElementById('today-allergy-info');
+        
+        if (allergies.size === 0) {
+            allergyInfoBox.classList.add('hidden');
+            return;
+        }
+        
+        allergyInfoBox.innerHTML = '<h4>알레르기 정보</h4>';
+        const allergyList = document.createElement('p');
+        allergyList.textContent = Array.from(allergies).sort((a, b) => a - b)
+            .map(num => `${num}: ${allergyMap[num] || '정보없음'}`).join(', ');
+        allergyInfoBox.appendChild(allergyList);
+        allergyInfoBox.classList.remove('hidden');
+    };
 
     // --- 오늘의 영양 정보 차트 렌더링 ---
-    const renderTodayChart = (nutritionData) => {
+    const renderTodayChart = async (nutritionData) => {
         const chartContainer = document.getElementById('today-chart-container');
         if (todayChart) todayChart.destroy();
 
@@ -146,32 +163,162 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         chartContainer.classList.remove('hidden');
 
+        // 월 평균 영양소 데이터 가져오기
+        const monthlyAvg = await getMonthlyAverageNutrition();
+        
+        // 교육청 평균 영양소 데이터 가져오기
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+        const districtAvg = await getDistrictAverageNutrition(dateStr);
+        
         const ctx = document.getElementById('today-nutrition-chart').getContext('2d');
         todayChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: ['탄수화물(g)', '단백질(g)', '지방(g)'],
                 datasets: [{
-                    label: '영양 성분',
+                    label: '오늘',
                     data: [nutritionData.carb.toFixed(1), nutritionData.prot.toFixed(1), nutritionData.fat.toFixed(1)],
-                    backgroundColor: ['#FFC107', '#2196F3', '#4CAF50']
+                    backgroundColor: ['rgba(255, 193, 7, 0.7)', 'rgba(33, 150, 243, 0.7)', 'rgba(76, 175, 80, 0.7)'],
+                    borderColor: ['rgba(255, 193, 7, 1)', 'rgba(33, 150, 243, 1)', 'rgba(76, 175, 80, 1)'],
+                    borderWidth: 1
+                },
+                {
+                    label: '월 평균',
+                    data: [
+                        monthlyAvg.carb.toFixed(1),
+                        monthlyAvg.prot.toFixed(1),
+                        monthlyAvg.fat.toFixed(1)
+                    ],
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // 투명 배경
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(255, 99, 132, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 0, // 선 없앰
+                    type: 'line',
+                    pointRadius: 6, // 점 크기 약간 키움
+                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    showLine: false // 선 연결 안 함
+                },
+                {
+                    label: '교육청 평균',
+                    data: [
+                        districtAvg.carb.toFixed(1),
+                        districtAvg.prot.toFixed(1),
+                        districtAvg.fat.toFixed(1)
+                    ],
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // 투명 배경
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)'],
+                    borderWidth: 0, // 선 없앰
+                    type: 'line',
+                    pointRadius: 6, // 점 크기 약간 키움
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    showLine: false // 선 연결 안 함
                 }]
             },
-            options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+            options: { 
+                indexAxis: 'y', 
+                responsive: true, 
+                plugins: { 
+                    legend: { display: false }, // 범례 숨김
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetIndex = context.datasetIndex;
+                                const value = context.parsed.x;
+                                if (datasetIndex === 0) return `오늘: ${value}g`;
+                                if (datasetIndex === 1) return `월 평균: ${value}g`;
+                                if (datasetIndex === 2) return `교육청 평균: ${value}g`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
         });
     };
 
-    // --- 오늘의 알레르기 정보 렌더링 (신규) ---
-    const renderTodayAllergyInfo = (allergySet) => {
-        const allergyContainer = document.getElementById('today-allergy-info');
-        if (allergySet.size > 0) {
-            allergyContainer.classList.remove('hidden');
-            allergyContainer.innerHTML = '<h4>알레르기 정보</h4>';
-            const allergyList = document.createElement('p');
-            allergyList.textContent = Array.from(allergySet).sort((a, b) => a - b).map(num => `${num}: ${allergyMap[num] || '정보없음'}`).join(', ');
-            allergyContainer.appendChild(allergyList);
-        } else {
-            allergyContainer.classList.add('hidden');
+    // --- 월 평균 영양소 계산 함수 (새로 추가) ---
+    const getMonthlyAverageNutrition = async () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        
+        try {
+            // 월간 급식 데이터 가져오기
+            const meals = await fetchMeals(year, month);
+            if (!meals || meals.length === 0) {
+                return { carb: 0, prot: 0, fat: 0 };
+            }
+            
+            // 영양소 정보가 있는 모든 급식 데이터 필터링
+            const mealsWithNutrition = meals.filter(meal => meal.NTR_INFO);
+            if (mealsWithNutrition.length === 0) {
+                return { carb: 0, prot: 0, fat: 0 };
+            }
+            
+            // 영양소 평균 계산
+            let totalCarb = 0, totalProt = 0, totalFat = 0;
+            let mealCount = 0;
+            
+            mealsWithNutrition.forEach(meal => {
+                const ntrInfo = meal.NTR_INFO || '';
+                const carbMatch = ntrInfo.match(/탄수화물\(g\)\s*:\s*([\d.]+)/);
+                const protMatch = ntrInfo.match(/단백질\(g\)\s*:\s*([\d.]+)/);
+                const fatMatch = ntrInfo.match(/지방\(g\)\s*:\s*([\d.]+)/);
+                
+                if (carbMatch && protMatch && fatMatch) {
+                    totalCarb += parseFloat(carbMatch[1]);
+                    totalProt += parseFloat(protMatch[1]);
+                    totalFat += parseFloat(fatMatch[1]);
+                    mealCount++;
+                }
+            });
+            
+            // 평균 계산
+            return {
+                carb: mealCount > 0 ? totalCarb / mealCount : 0,
+                prot: mealCount > 0 ? totalProt / mealCount : 0,
+                fat: mealCount > 0 ? totalFat / mealCount : 0
+            };
+            
+        } catch (error) {
+            console.error('월 평균 영양소 계산 오류:', error);
+            return { carb: 0, prot: 0, fat: 0 };
+        }
+    };
+
+    // --- 교육청 평균 영양소 가져오기 (새로 추가) ---
+    const getDistrictAverageNutrition = async (date) => {
+        if (!currentSchool) return { carb: 0, prot: 0, fat: 0 };
+        
+        try {
+            const response = await fetch(`/api/getDistrictAverage?officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&date=${date}`);
+            const data = await response.json();
+            
+            if (data.error || !data.averageNutrition) {
+                console.error('교육청 평균 영양소 오류:', data.error || '데이터 없음');
+                return { carb: 0, prot: 0, fat: 0 };
+            }
+            
+            return data.averageNutrition;
+        } catch (error) {
+            console.error('교육청 평균 영양소 가져오기 오류:', error);
+            return { carb: 0, prot: 0, fat: 0 };
         }
     };
 
@@ -455,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 모달 영양 정보 차트 ---
-    const updateNutritionChart = (nutritionData) => {
+    const updateNutritionChart = async (nutritionData) => {
         if (nutritionChart) nutritionChart.destroy();
 
         const nutritionInfoDiv = document.getElementById('modal-nutrition-info');
@@ -471,23 +618,98 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // 월 평균 영양소 데이터 가져오기
+        const monthlyAvg = await getMonthlyAverageNutrition();
+        
+        // 교육청 평균 영양소 데이터 가져오기 (모달에 표시된 날짜 기준)
+        const dateText = modalDate.textContent; // "YYYY년 M월 D일" 형식
+        const year = dateText.match(/(\d+)년/)[1];
+        const month = dateText.match(/(\d+)월/)[1].padStart(2, '0');
+        const day = dateText.match(/(\d+)일/)[1].padStart(2, '0');
+        const dateStr = `${year}${month}${day}`;
+        const districtAvg = await getDistrictAverageNutrition(dateStr);
+        
         nutritionChartCanvas.style.display = 'block';
         const ctx = nutritionChartCanvas.getContext('2d');
         nutritionChart = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'bar',
             data: {
                 labels: ['탄수화물(g)', '단백질(g)', '지방(g)'],
                 datasets: [{
-                    label: '영양성분',
-                    data: [nutritionData.carb, nutritionData.prot, nutritionData.fat],
-                    backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)'],
+                    label: '선택 날짜',
+                    data: [nutritionData.carb.toFixed(1), nutritionData.prot.toFixed(1), nutritionData.fat.toFixed(1)],
+                    backgroundColor: ['rgba(255, 193, 7, 0.7)', 'rgba(33, 150, 243, 0.7)', 'rgba(76, 175, 80, 0.7)'],
+                    borderColor: ['rgba(255, 193, 7, 1)', 'rgba(33, 150, 243, 1)', 'rgba(76, 175, 80, 1)'],
+                    borderWidth: 1
+                },
+                {
+                    label: '월 평균',
+                    data: [
+                        monthlyAvg.carb.toFixed(1),
+                        monthlyAvg.prot.toFixed(1),
+                        monthlyAvg.fat.toFixed(1)
+                    ],
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // 투명 배경
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(255, 99, 132, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 0, // 선 없앰
+                    type: 'line',
+                    pointRadius: 6, // 점 크기 약간 키움
+                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    showLine: false // 선 연결 안 함
+                },
+                {
+                    label: '교육청 평균',
+                    data: [
+                        districtAvg.carb.toFixed(1),
+                        districtAvg.prot.toFixed(1),
+                        districtAvg.fat.toFixed(1)
+                    ],
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // 투명 배경
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 1)'],
+                    borderWidth: 0, // 선 없앰
+                    type: 'line',
+                    pointRadius: 6, // 점 크기 약간 키움
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    showLine: false // 선 연결 안 함
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    title: { display: true, text: `총 칼로리: ${nutritionData.cal.toFixed(2)} kcal` }
+            options: { 
+                indexAxis: 'y', 
+                responsive: true, 
+                plugins: { 
+                    legend: { display: false }, // 범례 숨김
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const datasetIndex = context.datasetIndex;
+                                const value = context.parsed.x;
+                                if (datasetIndex === 0) return `선택 날짜: ${value}g`;
+                                if (datasetIndex === 1) return `월 평균: ${value}g`;
+                                if (datasetIndex === 2) return `교육청 평균: ${value}g`;
+                            }
+                        }
+                    },
+                    title: { 
+                        display: true, 
+                        text: `총 칼로리: ${nutritionData.cal.toFixed(2)} kcal` 
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
                 }
             }
         });
