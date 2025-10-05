@@ -471,8 +471,23 @@ document.addEventListener('DOMContentLoaded', () => {
             dayEl.textContent = day;
             calendarGrid.appendChild(dayEl);
         });
-
+        
+        // 해당 월의 첫 날짜 구하기
+        const firstDay = new Date(year, month, 1);
+        // 해당 월의 첫 날짜의 요일 (0: 일, 1: 월, ..., 6: 토)
+        const firstDayOfWeek = firstDay.getDay(); 
+        // 해당 월의 마지막 날짜 구하기
         const lastDate = new Date(year, month + 1, 0).getDate();
+        
+        // 달력 배치를 위한 빈 셀 추가 (월요일부터 시작하도록)
+        const emptyCellCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+        for (let i = 0; i < emptyCellCount; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('date', 'empty');
+            calendarGrid.appendChild(emptyCell);
+        }
+        
+        // 날짜 셀 추가
         for (let i = 1; i <= lastDate; i++) {
             const currentDay = new Date(year, month, i);
             const dayOfWeek = currentDay.getDay();
