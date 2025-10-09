@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "meal-app-45e91",
+    "prod": "meal-app-45e91"
+  },
+  "targets": {},
+  "etags": {}
+}

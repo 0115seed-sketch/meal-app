@@ -2,6 +2,8 @@
 
 전국 학교의 급식 정보를 조회할 수 있는 웹 애플리케이션입니다. 나이스(NEIS) API를 활용하여 실시간 급식 정보를 제공합니다.
 
+🌐 **배포 URL**: https://meal-app-45e91.web.app
+
 
 ## ✨ 주요 기능
 
@@ -18,6 +20,8 @@
 ### 📊 영양 정보
 - 급식의 영양 성분 분석 (탄수화물, 단백질, 지방)
 - Chart.js를 활용한 시각적 차트 제공
+- 월 평균 영양소 비교
+- 교육청 평균 영양소 비교
 - 상세 영양 정보 모달
 
 ### 🚨 알레르기 정보
@@ -44,6 +48,11 @@
 - **Axios**: HTTP 클라이언트
 - **CORS**: Cross-Origin Resource Sharing 처리
 
+### Deployment & Hosting
+- **Firebase Hosting**: 프론트엔드 정적 파일 호스팅
+- **Firebase Functions**: 서버리스 백엔드 API 배포
+- **GitHub Actions**: CI/CD 자동 배포 (main 브랜치 push 시 자동 배포)
+
 ### External API
 - **나이스(NEIS) 교육정보 개방 포털**: 학교 정보 및 급식 데이터 제공
 
@@ -52,22 +61,42 @@
 ```
 meal-app/
 ├── backend/
-│   ├── package.json          # 백엔드 의존성 관리
-│   ├── server.js             # Express 서버 메인 파일
+│   ├── package.json          # 백엔드 의존성 관리 (참고용)
+│   ├── server.js             # Express 서버 메인 파일 (참고용)
 │   └── package-lock.json     # 의존성 잠금 파일
 ├── frontend/
 │   ├── index.html            # 메인 HTML 파일
 │   ├── app.js                # 프론트엔드 로직
 │   └── styles.css            # 스타일시트
+├── functions/
+│   ├── index.js              # Firebase Functions 메인 파일 (배포용 백엔드)
+│   ├── package.json          # Functions 의존성 관리
+│   └── .gitignore            # Functions 제외 파일
+├── .github/
+│   └── workflows/            # GitHub Actions 자동 배포 워크플로우
+├── firebase.json             # Firebase 설정 파일
+├── .firebaserc               # Firebase 프로젝트 설정
 ├── 학교기본정보_2025년8월31일기준.csv  # 학교 데이터 (참고용)
 └── README.md                 # 프로젝트 문서
 ```
 
-## 🚀 설치 및 실행
+## 🚀 배포 및 접속
+
+### 온라인 접속
+이 프로젝트는 Firebase Hosting에 배포되어 있습니다.
+
+🌐 **배포 URL**: https://meal-app-45e91.web.app
+
+별도의 설치 없이 웹 브라우저에서 바로 접속하여 사용할 수 있습니다.
+
+---
+
+## 🛠 로컬 개발 환경 설정
 
 ### 사전 요구사항
-- Node.js 14.0 이상
+- Node.js 18.0 이상
 - npm 또는 yarn
+- Firebase CLI (`npm install -g firebase-tools`)
 
 ### 1. 저장소 클론
 ```bash
@@ -75,20 +104,48 @@ git clone https://github.com/0115seed-sketch/meal-app.git
 cd meal-app
 ```
 
-### 2. 백엔드 의존성 설치
+### 2. Firebase Functions 의존성 설치
 ```bash
-cd backend
+cd functions
 npm install
 ```
 
-### 3. 서버 실행
+### 3. Firebase 로컬 에뮬레이터 실행
 ```bash
-npm start
+cd ..
+firebase emulators:start
 ```
 
 ### 4. 브라우저에서 접속
 ```
-http://localhost:3000
+http://localhost:5000
+```
+
+---
+
+## 🚀 배포 방법
+
+### 자동 배포 (권장)
+`main` 브랜치에 코드를 push하면 GitHub Actions가 자동으로 Firebase에 배포합니다.
+
+```bash
+git add .
+git commit -m "Update features"
+git push origin main
+```
+
+### 수동 배포
+Firebase CLI를 사용하여 직접 배포할 수 있습니다.
+
+```bash
+# 전체 배포 (Hosting + Functions)
+firebase deploy
+
+# Hosting만 배포
+firebase deploy --only hosting
+
+# Functions만 배포
+firebase deploy --only functions
 ```
 
 ## 🔧 API 엔드포인트
@@ -111,6 +168,16 @@ GET /api/getMeal?schoolCode={학교코드}&officeCode={교육청코드}&year={�
   - `month` - 조회 월 (MM)
 - **응답**: 급식 정보 배열
 
+### 교육청 평균 영양소 조회
+```
+GET /api/getDistrictAverage?officeCode={교육청코드}&date={날짜}
+```
+- **매개변수**: 
+  - `officeCode` - 교육청 코드
+  - `date` - 조회 날짜 (YYYYMMDD)
+- **응답**: 교육청 내 학교들의 평균 영양소 정보
+- **캐싱**: 7일간 캐시되어 API 호출 최소화
+
 ## 🎯 사용법
 
 ### 1. 학교 설정
@@ -130,7 +197,7 @@ GET /api/getMeal?schoolCode={학교코드}&officeCode={교육청코드}&year={�
 ## 🔐 환경 설정
 
 ### 나이스 API 키 설정
-`server.js` 파일의 API_KEY를 본인의 나이스 API 키로 변경해주세요.
+`functions/index.js` 파일의 API_KEY를 본인의 나이스 API 키로 변경해주세요.
 
 ```javascript
 const API_KEY = "your_neis_api_key_here";
@@ -138,12 +205,48 @@ const API_KEY = "your_neis_api_key_here";
 
 > 나이스 API 키는 [나이스 교육정보 개방 포털](https://open.neis.go.kr/)에서 발급받을 수 있습니다.
 
+### Firebase 프로젝트 설정
+본인의 Firebase 프로젝트를 사용하려면:
+
+1. [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
+2. Blaze(종량제) 요금제로 업그레이드 (Functions 사용 시 필요)
+3. Firebase CLI로 로그인
+   ```bash
+   firebase login
+   ```
+4. 프로젝트 연결
+   ```bash
+   firebase use --add
+   ```
+5. 배포
+   ```bash
+   firebase deploy
+   ```
+
 ## 📱 브라우저 지원
 
 - Chrome 60+
 - Firefox 55+
 - Safari 12+
 - Edge 79+
+
+## ⚙️ 주요 기능 상세
+
+### 영양소 비교 기능
+- **오늘의 급식**: 당일 급식의 영양소를 월 평균 및 교육청 평균과 비교
+- **월 평균**: 선택한 학교의 해당 월 전체 급식 영양소 평균
+- **교육청 평균**: 같은 교육청 내 학교들의 해당 날짜 급식 영양소 평균 (샘플링 기반)
+- 시각적 차트로 비교 데이터 표시
+
+### 캐싱 시스템
+- 교육청 평균 데이터는 7일간 캐시되어 API 호출 최소화
+- 빠른 응답 속도 및 나이스 API 부하 감소
+
+### 자동 배포 시스템
+- GitHub에 push 시 자동으로 Firebase에 배포
+- CI/CD 파이프라인 구축으로 개발 효율성 향상
+
+---
 
 ## 🤝 기여하기
 

@@ -457,6 +457,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // --- 외부 클릭 시 검색 결과 닫기 ---
+    document.addEventListener('click', (e) => {
+        const isClickInsideSearch = schoolSearchInput.contains(e.target) || 
+                                   searchBtn.contains(e.target) || 
+                                   schoolSearchResults.contains(e.target);
+        
+        if (!isClickInsideSearch && schoolSearchResults.innerHTML !== '') {
+            schoolSearchResults.innerHTML = '';
+        }
+    });
+
     // --- 달력 렌더링 ---
     const renderCalendar = async () => {
         calendarGrid.innerHTML = '';
