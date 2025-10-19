@@ -302,9 +302,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 교육청 평균 영양소 가져오기 (새로 추가) ---
+    // --- 교육청 평균 영양소 가져오기 (캐싱 추가) ---
     const getDistrictAverageNutrition = async (date) => {
         if (!currentSchool) return { carb: 0, prot: 0, fat: 0 };
+        
+        // 세션 스토리지에서 캐시된 데이터 확인 (1시간 유효)
+        const cacheKey = `districtAvg_${currentSchool.ATPT_OFCDC_SC_CODE}_${date}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        
+        if (cached) {
+            try {
+                const cachedData = JSON.parse(cached);
+                const cacheTime = cachedData.timestamp;
+                const now = Date.now();
+                
+                // 1시간(3600000ms) 이내면 캐시 사용
+                if (now - cacheTime < 3600000) {
+                    console.log('교육청 평균 캐시 사용:', date);
+                    return cachedData.data;
+                }
+            } catch (e) {
+                console.error('캐시 파싱 오류:', e);
+            }
+        }
         
         try {
             const response = await fetch(`/api/getDistrictAverage?officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&date=${date}`);
@@ -314,6 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('교육청 평균 영양소 오류:', data.error || '데이터 없음');
                 return { carb: 0, prot: 0, fat: 0 };
             }
+            
+            // 세션 스토리지에 캐시 저장
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                data: data.averageNutrition,
+                timestamp: Date.now()
+            }));
             
             return data.averageNutrition;
         } catch (error) {
@@ -382,12 +408,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 급식 정보 가져오는 함수 (중복 제거) ---
+    // --- 급식 정보 가져오는 함수 (캐싱 추가) ---
     const fetchMeals = async (year, month) => {
         if (!currentSchool) return [];
+        
+        // 세션 스토리지에서 캐시된 데이터 확인 (30분 유효)
+        const cacheKey = `meals_${currentSchool.SD_SCHUL_CODE}_${year}_${month}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        
+        if (cached) {
+            try {
+                const cachedData = JSON.parse(cached);
+                const cacheTime = cachedData.timestamp;
+                const now = Date.now();
+                
+                // 30분(1800000ms) 이내면 캐시 사용
+                if (now - cacheTime < 1800000) {
+                    console.log(`급식 캐시 사용: ${year}-${month}`);
+                    return cachedData.data;
+                }
+            } catch (e) {
+                console.error('급식 캐시 파싱 오류:', e);
+            }
+        }
+        
         try {
             const response = await fetch(`/api/getMeal?schoolCode=${currentSchool.SD_SCHUL_CODE}&officeCode=${currentSchool.ATPT_OFCDC_SC_CODE}&year=${year}&month=${String(month).padStart(2, '0')}`);
-            return await response.json();
+            const data = await response.json();
+            
+            // 세션 스토리지에 캐시 저장
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                data: data,
+                timestamp: Date.now()
+            }));
+            
+            return data;
         } catch (error) {
             console.error(`급식 정보 오류 (${year}-${month}):`, error);
             return [];
